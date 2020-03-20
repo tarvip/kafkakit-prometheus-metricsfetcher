@@ -217,10 +217,30 @@ func writeToZookeeper(zkConn *zk.Conn, path string, data []byte) error {
 		return fmt.Errorf("unable to delete path %s. err: %v", path, err)
 	}
 
-	// Create the directory node
-	_, err = zkConn.Create(dir, nil, 0, zk.WorldACL(zk.PermAll))
-	if err != nil && err != zk.ErrNodeExists {
-		return fmt.Errorf("unable to create node %s. err: %v", path, err)
+	acl, _, err := zkConn.GetACL(dir)
+	if err != nil {
+		if err == zk.ErrNoNode {
+			// Create the directory node if it is missing
+			_, err = zkConn.Create(dir, nil, 0, zk.WorldACL(zk.PermAll))
+			if err != nil && err != zk.ErrNodeExists {
+				return fmt.Errorf("unable to create node %s. err: %v", dir, err)
+			}
+		} else {
+			return fmt.Errorf("unable to get node %s acl. err: %v", dir, err)
+		}
+	} else {
+		// Ensure that we have WorldACL with PermAll
+		var waclExists bool
+		wacl := zk.WorldACL(zk.PermAll)[0]
+		for _, a := range acl {
+			if a == wacl {
+				waclExists = true
+				break
+			}
+		}
+		if !waclExists {
+			return fmt.Errorf("zookeeper node %s has wrong ACL: %v", dir, acl)
+		}
 	}
 
 	// Create the data node
