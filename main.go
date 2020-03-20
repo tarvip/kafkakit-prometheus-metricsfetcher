@@ -84,6 +84,8 @@ func promQuery(q string) (model.Value, error) {
 }
 
 func getBrokerFreeSpace() *brokerStorageFree {
+	log.Info("Getting broker storage stats from Prometheus")
+
 	m := make(brokerStorageFree)
 
 	result, err := promQuery(flBrokerStorageQuery)
@@ -104,6 +106,8 @@ func getBrokerFreeSpace() *brokerStorageFree {
 }
 
 func getPartitionSizes() *topicPartitionSize {
+	log.Info("Getting partition sizes from Prometheus")
+
 	m := make(topicPartitionSize)
 
 	result, err := promQuery(flPartitionSizeQuery)
