@@ -57,7 +57,7 @@ func init() {
 
 	flag.StringVar(&flPrometheusURL, "prometheus-url", "", "Prometheus URL")
 	flag.DurationVar(&flPrometheusQueryTimeout, "prometheus-query-timeout", 30*time.Second, "Timeout for Prometheus queries")
-	flag.StringVar(&flZkAddr, "zk-addr", "zookeeper:2181", "Zookeeper host")
+	flag.StringVar(&flZkAddr, "zk-addr", "localhost:2181", "Zookeeper host")
 	flag.StringVar(&flPartitionSizeQuery, "partition-size-query", "", "Prometheus query to get partition size by topic")
 	flag.StringVar(&flBrokerStorageQuery, "broker-storage-query", "", "Prometheus query to get broker storage free space")
 	flag.StringVar(&flBrokerIDLabel, "broker-id-label", "broker_id", "Prometheus label for broker ID")
