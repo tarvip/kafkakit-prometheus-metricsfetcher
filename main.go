@@ -149,8 +149,7 @@ func processData(zkConn *zk.Conn, brokerMetrics *brokerStorageFree, partitionMap
 		return err
 	}
 
-	switch {
-	case flDryRun:
+	if flDryRun {
 		// In dry-run don't do anything but display the information we retrieved and computed.
 		log.Println("partition mapping")
 
@@ -187,8 +186,7 @@ func processData(zkConn *zk.Conn, brokerMetrics *brokerStorageFree, partitionMap
 		for brokerID, obj := range *brokerMetrics {
 			log.Printf("broker #%-4s %15s: %s", brokerID, "storage free", humanize.Bytes(uint64(obj.StorageFree)))
 		}
-
-	default:
+	} else {
 		if err := writeToZookeeper(zkConn, "partitionmeta", topicPartitionSizeData); err != nil {
 			return err
 		}
