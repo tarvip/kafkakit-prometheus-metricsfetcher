@@ -39,6 +39,7 @@ var (
 	flPartitionSizeQuery     string
 	flBrokerStorageQuery     string
 	flBrokerIDLabel          string
+	flBrokerIDMap            map[string]string
 	flDryRun                 bool
 
 	zkChroot  string
@@ -61,6 +62,7 @@ func init() {
 	flag.StringVar(&flPartitionSizeQuery, "partition-size-query", "", "Prometheus query to get partition size by topic")
 	flag.StringVar(&flBrokerStorageQuery, "broker-storage-query", "", "Prometheus query to get broker storage free space")
 	flag.StringVar(&flBrokerIDLabel, "broker-id-label", "broker_id", "Prometheus label for broker ID")
+	flag.StringToStringVar(&flBrokerIDMap, "broker-id-map", nil, "Map value to broker ID. Eg.\"10.25.76.1=1004,10.53.32.1=1005\"")
 	flag.BoolVar(&flDryRun, "dry-run", false, "Fetch the metrics but don't write them to ZooKeeper, instead print them")
 	flag.Parse()
 }
@@ -96,9 +98,23 @@ func getBrokerFreeSpace() *brokerStorageFree {
 	if result.Type() == model.ValVector {
 		vectorVal := result.(model.Vector)
 
-		for _, elem := range vectorVal {
-			bid := string(elem.Metric[model.LabelName(flBrokerIDLabel)])
-			m[bid] = brokerStorageFreeValue{StorageFree: float64(elem.Value)}
+		if flBrokerIDMap != nil {
+			log.Infof("Broker ID Map: %v", flBrokerIDMap)
+			if len(vectorVal) != len(flBrokerIDMap) {
+				log.Warn("Returned metrics not equal to broker ID override map")
+			}
+			for _, elem := range vectorVal {
+				bid := string(elem.Metric[model.LabelName(flBrokerIDLabel)])
+				if k, exists := flBrokerIDMap[bid]; exists {
+					bid = k
+				}
+				m[bid] = brokerStorageFreeValue{StorageFree: float64(elem.Value)}
+			}
+		} else {
+			for _, elem := range vectorVal {
+				bid := string(elem.Metric[model.LabelName(flBrokerIDLabel)])
+				m[bid] = brokerStorageFreeValue{StorageFree: float64(elem.Value)}
+			}
 		}
 	}
 
