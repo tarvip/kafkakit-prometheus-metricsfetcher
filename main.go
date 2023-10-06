@@ -1,6 +1,8 @@
 package main
 
 import (
+	"bytes"
+	"compress/gzip"
 	"context"
 	"encoding/json"
 	"fmt"
@@ -41,6 +43,7 @@ var (
 	flBrokerIDLabel          string
 	flBrokerIDMap            map[string]string
 	flDryRun                 bool
+	flCompress               bool
 
 	zkChroot  string
 	apiClient api.Client
@@ -64,6 +67,7 @@ func init() {
 	flag.StringVar(&flBrokerIDLabel, "broker-id-label", "broker_id", "Prometheus label for broker ID")
 	flag.StringToStringVar(&flBrokerIDMap, "broker-id-map", nil, "Map value to broker ID. Eg.\"10.25.76.1=1004,10.53.32.1=1005\"")
 	flag.BoolVar(&flDryRun, "dry-run", false, "Fetch the metrics but don't write them to ZooKeeper, instead print them")
+	flag.BoolVar(&flCompress, "compress", false, "Compress the broker/partition metrics when writing them to ZooKeepeer")
 	flag.Parse()
 }
 
@@ -261,10 +265,23 @@ func writeToZookeeper(zkConn *zk.Conn, path string, data []byte) error {
 		}
 	}
 
+    if flCompress {
+        var buf bytes.Buffer
+        zw := gzip.NewWriter(&buf)
+        defer zw.Close()
+
+        _, err = zw.Write(data)
+        if err != nil {
+            return fmt.Errorf("unable to compress data")
+        }
+
+	    data = buf.Bytes()
+    }
+
 	// Create the data node
 	log.Printf("writing data to %s", path)
-
 	_, err = zkConn.Create(path, data, 0, zk.WorldACL(zk.PermAll))
+
 	if err != nil {
 		return fmt.Errorf("unable to create path %s. err: %v", path, err)
 	}
