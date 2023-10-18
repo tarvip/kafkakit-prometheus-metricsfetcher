@@ -5,6 +5,7 @@ import (
 	"compress/gzip"
 	"context"
 	"encoding/json"
+	"flag"
 	"fmt"
 	"os"
 	"sort"
@@ -13,12 +14,12 @@ import (
 	"time"
 
 	"github.com/dustin/go-humanize"
+	"github.com/jamiealquiza/envy"
 	"github.com/prometheus/client_golang/api"
 	v1 "github.com/prometheus/client_golang/api/prometheus/v1"
 	"github.com/prometheus/common/model"
 	"github.com/samuel/go-zookeeper/zk"
 	"github.com/sirupsen/logrus"
-	flag "github.com/spf13/pflag"
 )
 
 type brokerStorageFreeValue struct {
@@ -41,6 +42,7 @@ var (
 	flPartitionSizeQuery     string
 	flBrokerStorageQuery     string
 	flBrokerIDLabel          string
+	flBrokerIDMapStr         string
 	flBrokerIDMap            map[string]string
 	flDryRun                 bool
 	flCompress               bool
@@ -65,10 +67,12 @@ func init() {
 	flag.StringVar(&flPartitionSizeQuery, "partition-size-query", "", "Prometheus query to get partition size by topic")
 	flag.StringVar(&flBrokerStorageQuery, "broker-storage-query", "", "Prometheus query to get broker storage free space")
 	flag.StringVar(&flBrokerIDLabel, "broker-id-label", "broker_id", "Prometheus label for broker ID")
-	flag.StringToStringVar(&flBrokerIDMap, "broker-id-map", nil, "Map value to broker ID. Eg.\"10.25.76.1=1004,10.53.32.1=1005\"")
+	flag.StringVar(&flBrokerIDMapStr, "broker-id-map", "", "Map value to broker ID. Eg.\"10.25.76.1=1004,10.53.32.1=1005\"")
 	flag.BoolVar(&flDryRun, "dry-run", false, "Fetch the metrics but don't write them to ZooKeeper, instead print them")
 	flag.BoolVar(&flCompress, "compress", false, "Compress the broker/partition metrics when writing them to ZooKeepeer")
-	flag.Parse()
+	envy.Parse("KAFKA_KIT_METRICSFETCHER")
+    flag.Parse()
+	flBrokerIDMap = make(map[string]string)
 }
 
 func promQuery(q string) (model.Value, error) {
@@ -287,6 +291,19 @@ func writeToZookeeper(zkConn *zk.Conn, path string, data []byte) error {
 	}
 
 	return nil
+}
+
+func parseBrokerIdMap() {
+	var (
+		brokerName string
+		brokerId   string
+	)
+	for _, chunk := range strings.Split(flBrokerIDMapStr, ",") {
+		brokerIdMappingChunks := strings.Split(chunk, "=")
+		brokerName = brokerIdMappingChunks[0]
+		brokerId = brokerIdMappingChunks[1]
+		flBrokerIDMap[brokerName] = brokerId
+	}
 }
 
 func main() {
