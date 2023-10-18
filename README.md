@@ -29,17 +29,28 @@ go get github.com/tarvip/kafkakit-prometheus-metricsfetcher
 
 ## Usage
 
-See the help of the command:
+Configuration can be passed using command line flags or using environment variables.
 
 ```
 Usage of kafkakit-prometheus-metricsfetcher:
-    --broker-id-label string              Prometheus label for broker ID (default "broker_id")
-    --broker-storage-query string         Prometheus query to get broker storage free space
-    --dry-run                             Fetch the metrics but don't write them to ZooKeeper, instead print them
-    --partition-size-query string         Prometheus query to get partition size by topic
-    --prometheus-query-timeout duration   Timeout for Prometheus queries (default 30s)
-    --prometheus-url string               Prometheus URL
-    --zk-addr string                      Zookeeper host (default "localhost:2181")
+  -broker-id-label string
+    	Prometheus label for broker ID [KAFKA_KIT_METRICSFETCHER_BROKER_ID_LABEL] (default "broker_id")
+  -broker-id-map string
+    	Map value to broker ID. Eg."10.25.76.1=1004,10.53.32.1=1005" [KAFKA_KIT_METRICSFETCHER_BROKER_ID_MAP]
+  -broker-storage-query string
+    	Prometheus query to get broker storage free space [KAFKA_KIT_METRICSFETCHER_BROKER_STORAGE_QUERY]
+  -compress
+    	Compress the broker/partition metrics when writing them to ZooKeepeer [KAFKA_KIT_METRICSFETCHER_COMPRESS]
+  -dry-run
+    	Fetch the metrics but don't write them to ZooKeeper, instead print them [KAFKA_KIT_METRICSFETCHER_DRY_RUN]
+  -partition-size-query string
+    	Prometheus query to get partition size by topic [KAFKA_KIT_METRICSFETCHER_PARTITION_SIZE_QUERY]
+  -prometheus-query-timeout duration
+    	Timeout for Prometheus queries [KAFKA_KIT_METRICSFETCHER_PROMETHEUS_QUERY_TIMEOUT] (default 30s)
+  -prometheus-url string
+    	Prometheus URL [KAFKA_KIT_METRICSFETCHER_PROMETHEUS_URL]
+  -zk-addr string
+    	Zookeeper host, optional zkchroot after port. Eg. "localhost:2181/my-chroot" [KAFKA_KIT_METRICSFETCHER_ZK_ADDR] (default "localhost:2181")
 ```
 
 Example:
