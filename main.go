@@ -71,8 +71,9 @@ func init() {
 	flag.BoolVar(&flDryRun, "dry-run", false, "Fetch the metrics but don't write them to ZooKeeper, instead print them")
 	flag.BoolVar(&flCompress, "compress", false, "Compress the broker/partition metrics when writing them to ZooKeepeer")
 	envy.Parse("KAFKA_KIT_METRICSFETCHER")
-    flag.Parse()
+	flag.Parse()
 	flBrokerIDMap = make(map[string]string)
+	parseBrokerIdMap()
 }
 
 func promQuery(q string) (model.Value, error) {
