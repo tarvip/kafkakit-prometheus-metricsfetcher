@@ -270,18 +270,17 @@ func writeToZookeeper(zkConn *zk.Conn, path string, data []byte) error {
 		}
 	}
 
-    if flCompress {
-        var buf bytes.Buffer
-        zw := gzip.NewWriter(&buf)
-        defer zw.Close()
+	if flCompress {
+		var buf bytes.Buffer
+		zw := gzip.NewWriter(&buf)
 
-        _, err = zw.Write(data)
-        if err != nil {
-            return fmt.Errorf("unable to compress data")
-        }
-
-	    data = buf.Bytes()
-    }
+		_, err = zw.Write(data)
+		if err != nil {
+			return fmt.Errorf("unable to compress data")
+		}
+		zw.Close()
+		data = buf.Bytes()
+	}
 
 	// Create the data node
 	log.Printf("writing data to %s", path)
